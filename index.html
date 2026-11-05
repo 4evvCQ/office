@@ -106,6 +106,7 @@ function render(d) {
 
   const tm = d.temp || {};
   html += '<h2>Температури</h2><div class="grid">' +
+    (tm.outside !== undefined ? card("Надворі", tm.outside, " °C", "var(--teal)") : "") +
     card("Батарея", tm.batt, " °C", "var(--blue)") +
     card("AC", tm.ac, " °C", "var(--amber)") +
     card("DC", tm.dc, " °C", "var(--red)") +
