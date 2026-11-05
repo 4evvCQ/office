@@ -7,7 +7,8 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 
 URL = "https://www.dtek-kem.com.ua/ua/shutdowns"
-GROUP = "GPV27.1"
+OFFICE = "27.1"
+GROUPS = ["27.1", "25.1", "29.1"]
 OUT = "dtek.json"
 KYIV = timezone(timedelta(hours=2))
 
@@ -62,18 +63,25 @@ def main():
         return 1
 
     day_ts = str(fact.get("today") or sorted(days)[0])
-    hours = days.get(day_ts, {}).get(GROUP)
-    if not hours:
-        print("немає даних для групи " + GROUP, file=sys.stderr)
+    day = days.get(day_ts, {})
+
+    groups = {}
+    for g in GROUPS:
+        raw = day.get("GPV" + g)
+        if raw:
+            groups[g] = {str(h): raw.get(str(h), "yes") for h in range(1, 25)}
+    if OFFICE not in groups:
+        print("немає даних для групи " + OFFICE, file=sys.stderr)
         return 1
 
     m = re.search(r"DisconSchedule\.updateTimestamp\s*=\s*'([^']*)'", page)
     data = {
-        "group": GROUP.replace("GPV", ""),
+        "group": OFFICE,
         "date": datetime.fromtimestamp(int(day_ts), KYIV).strftime("%Y-%m-%d"),
         "schedule_updated": fact.get("update"),
         "site_updated": m.group(1) if m else None,
-        "hours": {str(h): hours.get(str(h), "yes") for h in range(1, 25)},
+        "hours": groups[OFFICE],
+        "groups": groups,
         "fetched": datetime.now(KYIV).isoformat(timespec="seconds"),
     }
 
