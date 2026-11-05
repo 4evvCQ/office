@@ -1,0 +1,34 @@
+name: DTEK schedule
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dtek
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch schedule
+        run: python3 scripts/dtek.py
+
+      - name: Commit if changed
+        run: |
+          if [ -n "$(git status --porcelain dtek.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add dtek.json
+            git commit -m "DTEK schedule $(TZ=Europe/Kyiv date '+%d.%m %H:%M')"
+            git push
+          else
+            echo "без змін"
+          fi
