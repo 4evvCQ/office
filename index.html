@@ -84,8 +84,6 @@
       <span><span class="t">Бот ДТЕК у Viber</span>
       <span class="d">Те саме, якщо зручніше Viber</span></span></a>
   </div>
-  <div class="note">Будинок у групі 27.1. Живлення забезпечує ПрАТ «ПЕЕМ «Центральна енергетична компанія», тому під час стабілізаційних відключень час звіряйте за номером черги.</div>
-
   <footer>Дані оновлюються автоматично кожні 10 хвилин</footer>
 </div>
 
@@ -142,7 +140,8 @@ function render(d) {
 
   const t = d.today || {};
   html += '<h2>Сьогодні</h2><div class="grid">' +
-    card("Без світла", fmtDur((t.outage_hours || 0) * 3600), "", "var(--red)") +
+    card("Без світла", on ? "0 год 0 хв" : fmtDur(now - d.since),
+         "", on ? "var(--green)" : "var(--red)") +
     card("Відключень", t.outages || 0, "", "var(--mauve)") +
     card("Спожито", t.consumed, " кВт·год", "var(--amber)") +
     card("З мережі", t.purchased, " кВт·год", "var(--mauve)") +
