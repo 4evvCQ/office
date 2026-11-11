@@ -90,6 +90,10 @@
 <script>
 const SRC = "https://gist.githubusercontent.com/4evvCQ/c68896e4c0b24caee935bbe88b7914d9/raw/office.json";
 const RESERVE = 10;
+// Коефіцієнти виміряні на реальних циклах: з 100% SOC знімається ~0.87 паспортної
+// ємності, а на заряд до 100% іде ~1.08 (втрати заряджання).
+const EFF_OUT = 0.87;
+const EFF_IN = 1.08;
 
 const fmtDur = s => {
   s = Math.max(0, Math.round(s));
@@ -112,10 +116,24 @@ function render(d) {
   const on = d.grid === true;
   const since = d.since ? fmtDur(now - d.since) : "";
   const load = (d.load_w || 0) / 1000;
-  const hrs = load > 0.05 ? (d.soc - RESERVE) / 100 * d.cap_kwh / load : null;
+  const hrs = load > 0.05 ? (d.soc - RESERVE) / 100 * d.cap_kwh * EFF_OUT / load : null;
+
+  const chg = -(d.batt_w || 0) / 1000;           // > 0 коли заряджається
+  let eta = null;
+  if (on && d.soc < 99 && chg > 0.1) {
+    const h = (100 - d.soc) / 100 * d.cap_kwh * EFF_IN / chg;
+    const t = new Date(Date.now() + h * 3600 * 1000);
+    eta = (h < 1 ? Math.round(h * 60) + " хв" : Math.round(h * 10) / 10 + " год") +
+          " · до " + String(t.getHours()).padStart(2, "0") + ":" +
+          String(t.getMinutes()).padStart(2, "0");
+  }
 
   let note;
-  if (on) note = since ? "Працює від міста вже " + since : "Працює від міста";
+  if (on) {
+    note = since ? "Працює від міста вже " + since : "Працює від міста";
+    if (eta) note += " · заряд 100% через " + eta;
+    else if (d.soc >= 99) note += " · батарея повна";
+  }
   else if (hrs === null) note = "Навантаження майже нульове";
   else if (hrs <= 0) note = "Батарея майже порожня";
   else note = "Батареї вистачить ще приблизно на " + (hrs < 1 ? Math.round(hrs * 60) + " хв" : Math.round(hrs) + " год");
