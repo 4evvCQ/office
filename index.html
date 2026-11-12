@@ -91,9 +91,10 @@
 const SRC = "https://gist.githubusercontent.com/4evvCQ/c68896e4c0b24caee935bbe88b7914d9/raw/office.json";
 const RESERVE = 10;
 // Коефіцієнти виміряні на реальних циклах: з 100% SOC знімається ~0.87 паспортної
-// ємності, а на заряд до 100% іде ~1.08 (втрати заряджання).
+// ємності, а на заряд до 100% іде ~1.13 (втрати заряджання).
 const EFF_OUT = 0.87;
-const EFF_IN = 1.08;
+const EFF_IN = 1.13;
+const CHG_KW = 3.0;   // типова потужність заряду від мережі
 
 const fmtDur = s => {
   s = Math.max(0, Math.round(s));
@@ -118,9 +119,12 @@ function render(d) {
   const load = (d.load_w || 0) / 1000;
   const hrs = load > 0.05 ? (d.soc - RESERVE) / 100 * d.cap_kwh * EFF_OUT / load : null;
 
-  const chg = -(d.batt_w || 0) / 1000;           // > 0 коли заряджається
+  // Deye-хмара віддає дані раз на ~6 хв, тож одразу після повернення світла
+  // тут ще стара потужність розряду — тоді беремо виміряну константу 3.0 кВт.
+  const chgRaw = -(d.batt_w || 0) / 1000;        // > 0 коли заряджається
+  const chg = chgRaw > 1 ? chgRaw : CHG_KW;
   let eta = null;
-  if (on && d.soc < 99 && chg > 0.1) {
+  if (on && d.soc < 99) {
     const h = (100 - d.soc) / 100 * d.cap_kwh * EFF_IN / chg;
     const t = new Date(Date.now() + h * 3600 * 1000);
     eta = (h < 1 ? Math.round(h * 60) + " хв" : Math.round(h * 10) / 10 + " год") +
