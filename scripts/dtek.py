@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 
 URL = "https://www.dtek-kem.com.ua/ua/shutdowns"
 OFFICE = "27.1"
-GROUPS = ["27.1", "25.1", "29.1"]
+GROUPS = ["27.1", "25.1", "29.1", "35.1"]
 OUT = "dtek.json"
 KYIV = timezone(timedelta(hours=2))
 ATTEMPTS = 3            # скільки разів пробувати, якщо ДТЕК віддав сторінку без графіка
